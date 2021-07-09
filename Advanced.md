@@ -74,3 +74,125 @@ $ ssh-add ~/.ssh/id_rsa_hupeidong
 
 可以建立一个 Pending Cache 服务，用于存放一个分片计算 common 数据的结果，其他分片则等待这个分片计算完成并且取到计算结果。取结果需要 rpc 调用。由于 prepare 和 取数是并行的，且取数的耗时更长，所以对于等待计算结果的机器也不会有很大的影响，而且能够减少 CPU。
 
+
+# Protocol Buffers
+
+## 1 Language Guide
+
+**Scalar Value Types**
+
+简单的类型
+
+A scalar message field can have one of the following types – the table shows the type specified in the .proto file, and the corresponding type in the automatically generated class:
+
+https://developers.google.com/protocol-buffers/docs/proto3#scalar
+
+**Assigning Field Numbers**
+
+Note that field numbers in the range 1 through 15 take one byte to encode, including the field number and the field's type (you can find out more about this in Protocol Buffer Encoding). Field numbers in the range 16 through 2047 take two bytes. So you should reserve the numbers 1 through 15 for very frequently occurring message elements. Remember to leave some room for frequently occurring elements that might be added in the future.
+
+**Specifying Field Rules**
+
+Message fields can be one of the following:
+
+singular: a well-formed message can have zero or one of this field (but not more than one). And this is the default field rule for proto3 syntax.
+
+repeated: this field can be repeated any number of times (including zero) in a well-formed message. The order of the repeated values will be preserved.
+
+In proto3, repeated fields of scalar numeric types use packed encoding by default.
+
+**Reserved Fields**
+
+The protocol buffer compiler will complain if any future users try to use these field identifiers.
+
+```
+message Foo {
+  reserved 2, 15, 9 to 11;
+  reserved "foo", "bar";
+}
+```
+
+**Default Values**
+
+When a message is parsed, if the encoded message does not contain a particular singular element, the corresponding field in the parsed object is set to the default value for that field. These defaults are type-specific:
+
+For strings, the default value is the empty string.
+For bytes, the default value is empty bytes.
+For bools, the default value is false.
+For numeric types, the default value is zero.
+For enums, the default value is the first defined enum value, which must be 0.
+For message fields, the field is not set. Its exact value is language-dependent. See the generated code guide for details.
+
+**Enumerations**
+
+```
+message SearchRequest {
+  string query = 1;
+  int32 page_number = 2;
+  int32 result_per_page = 3;
+  enum Corpus {
+    UNIVERSAL = 0;
+    WEB = 1;
+    IMAGES = 2;
+    LOCAL = 3;
+    NEWS = 4;
+    PRODUCTS = 5;
+    VIDEO = 6;
+  }
+  Corpus corpus = 4;
+}
+```
+
+every enum definition must contain a constant that maps to zero as its first element. This is because:
+
+There must be a zero value, so that we can use 0 as a numeric default value.
+The zero value needs to be the first element, for compatibility with the proto2 semantics where the first enum value is always the default.
+
+You can define aliases by assigning the same value to different enum constants. To do this you need to set the allow_alias option to true, otherwise the protocol compiler will generate an error message when aliases are found.
+
+```
+message MyMessage1 {
+  enum EnumAllowingAlias {
+    option allow_alias = true;
+    UNKNOWN = 0;
+    STARTED = 1;
+    RUNNING = 1;
+  }
+}
+message MyMessage2 {
+  enum EnumNotAllowingAlias {
+    UNKNOWN = 0;
+    STARTED = 1;
+    // RUNNING = 1;  // Uncommenting this line will cause a compile error inside Google and a warning message outside.
+  }
+}
+```
+
+**Importing Definitions**
+
+```
+import "myproject/other_protos.proto";
+```
+
+By default you can only use definitions from directly imported .proto files. However, sometimes you may need to move a .proto file to a new location. Instead of moving the .proto file directly and updating all the call sites in a single change, now you can put a dummy .proto file in the old location to forward all the imports to the new location using the import public notion. import public dependencies can be transitively relied upon by anyone importing the proto containing the import public statement. For example:
+
+```
+// new.proto
+// All definitions are moved here
+```
+
+```
+// old.proto
+// This is the proto that all clients are importing.
+import public "new.proto";
+import "other.proto";
+```
+
+```
+// client.proto
+import "old.proto";
+// You use definitions from old.proto and new.proto, but not other.proto
+```
+
+**Nested Types**
+
