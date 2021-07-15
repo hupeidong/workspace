@@ -600,3 +600,454 @@ hupeidong@ZBMac-C02F31WYM Desktop % ./main
 stringView1: hello world, stringView2: hell
 stringView3: hello world, stringView4: hell
 ```
+
+# 工厂模式
+
+工厂模式一般分为三种：简单工厂模式、工厂方法模式、抽象工厂模式。
+
+## 1 简单工厂模式
+
+简单工厂模式，工厂类是创建产品的，它决定创建哪一种产品。例如，现有宝马和奔驰两种车需要生产，但是只有一个工厂，且只能在同一时间生产一种车，这时就由工厂决定生产哪种车了。
+
+```c++
+#include <iostream>
+
+using namespace std;
+
+enum CarType { BENZ, BMW };
+
+class Car  //车类
+{
+public:
+    virtual void createdCar(void) = 0;
+};
+
+class BenzCar : public Car  //奔驰车
+{
+public:
+    BenzCar() {
+        cout << "Benz::Benz()" << endl;
+    }
+    virtual void createdCar(void) {
+        cout << "BenzCar::createdCar()" << endl;
+    }
+    ~BenzCar() {
+    }
+};
+
+class BmwCar : public Car  //宝马车
+{
+public:
+    BmwCar() {
+        cout << "Bmw::Bmw()" << endl;
+    }
+    virtual void createdCar(void) {
+        cout << "BmwCar::createdCar()" << endl;
+    }
+};
+
+class CarFactory  //车厂
+{
+public:
+    Car* createSpecificCar(CarType type) {
+        switch (type) {
+            case BENZ:  //生产奔驰车
+                return (new BenzCar());
+                break;
+            case BMW:  //生产宝马车
+                return (new BmwCar());
+                break;
+            default:
+                return NULL;
+                break;
+        }
+    }
+};
+
+int main(int argc, char** argv) {
+    CarFactory carfac;
+
+    Car* specificCarA = carfac.createSpecificCar(BENZ);
+    Car* specificCarB = carfac.createSpecificCar(BMW);
+
+    return 0;
+}
+
+hupeidong@ZBMac-C02F31WYM Desktop % ./main
+Benz::Benz()
+Bmw::Bmw()
+```
+
+简单工厂模式在每次增加新的车型时，需要修改工厂类，这就违反了开放封闭原则：软件实体（类、模块、函数）可以扩展，但是不可修改。于是，工厂方法模式出现了。
+
+总结：工厂类直接去生产车。
+
+## 2 工厂方法模式
+
+工厂方法模式，不再只由一个工厂类决定哪一个产品类应当被实例化，这个决定权被交给子类去做。当有新的产品（新型汽车）产生时，只要按照抽象产品角色、抽象工厂角色提供的方法来生成即可。那么就可以被客户使用，而不必去修改任何已有的代码。可以看出工厂角色的结构也是符合开闭原则。
+
+```c++
+#include <iostream>
+
+using namespace std;
+
+class Car  //车类
+{
+public:
+    virtual void createdCar(void) = 0;
+};
+
+class BenzCar : public Car  //奔驰车
+{
+public:
+    BenzCar() {
+        cout << "Benz::Benz()" << endl;
+    }
+    virtual void createdCar(void) {
+        cout << "BenzCar::createdCar()" << endl;
+    }
+    ~BenzCar() {
+    }
+};
+
+class BmwCar : public Car  //宝马车
+{
+public:
+    BmwCar() {
+        cout << "Bmw::Bmw()" << endl;
+    }
+    virtual void createdCar(void) {
+        cout << "BmwCar::createdCar()" << endl;
+    }
+};
+
+class Factory  //车厂
+{
+public:
+    virtual Car* createSpecificCar(void) = 0;
+};
+
+class BenzFactory : public Factory  //奔驰车厂
+{
+public:
+    virtual Car* createSpecificCar(void) {
+        return (new BenzCar());
+    }
+};
+
+class BmwFactory : public Factory  //宝马车厂
+{
+public:
+    virtual Car* createSpecificCar(void) {
+        return (new BmwCar());
+    }
+};
+
+int main() {
+    Factory* factory = new BenzFactory();
+    Car* specificCarA = factory->createSpecificCar();
+
+    factory = new BmwFactory();
+    Car* specificCarB = factory->createSpecificCar();
+
+    return 0;
+}
+
+hupeidong@ZBMac-C02F31WYM Desktop % ./main
+Benz::Benz()
+Bmw::Bmw()
+```
+
+总结：抽象的工厂类派生出奔驰车场类，去生产奔驰车。不直接修改抽象的工厂类，这是与简单工厂模式的区别。
+
+## 3 抽象工厂
+
+在工厂方法模式基础上，如果需要生产高配版的奔驰和宝马，那工厂方法模式就有点鞭长莫及了，这就又有抽象工厂模式。
+
+```c++
+#include <iostream>
+
+using namespace std;
+
+class Car  //车类
+{
+public:
+    virtual void createdCar(void) = 0;
+};
+
+class BenzCar : public Car  //奔驰车
+{
+public:
+    BenzCar() {
+        cout << "Benz::Benz()" << endl;
+    }
+    virtual void createdCar(void) {
+        cout << "BenzCar::createdCar()" << endl;
+    }
+    ~BenzCar() {
+    }
+};
+
+class BmwCar : public Car  //宝马车
+{
+public:
+    BmwCar() {
+        cout << "Bmw::Bmw()" << endl;
+    }
+    virtual void createdCar(void) {
+        cout << "BmwCar::createdCar()" << endl;
+    }
+};
+
+class HighCar  //高配版车型
+{
+public:
+    virtual void createdCar(void) = 0;
+};
+
+class HighBenzCar : public HighCar  //高配奔驰车
+{
+public:
+    HighBenzCar() {
+        cout << "HighBenzCarBenz::Benz()" << endl;
+    }
+    virtual void createdCar(void) {
+        cout << "HighBenzCar::createdCar()" << endl;
+    }
+};
+
+class HighBmwCar : public HighCar  //高配宝马车
+{
+public:
+    HighBmwCar() {
+        cout << "HighBmwCar::Bmw()" << endl;
+    }
+    virtual void createdCar(void) {
+        cout << "HighBmwCar::createdCar()" << endl;
+    }
+};
+
+class Factory  //车厂
+{
+public:
+    virtual Car* createSpecificCar(void) = 0;
+    virtual HighCar* createdSpecificHighCar(void) = 0;
+};
+
+class BenzFactory : public Factory  //奔驰车厂
+{
+public:
+    virtual Car* createSpecificCar(void) {
+        return (new BenzCar());
+    }
+
+    virtual HighCar* createdSpecificHighCar(void) {
+        return (new HighBenzCar());
+    }
+};
+
+class BmwFactory : public Factory  //宝马车厂
+{
+public:
+    virtual Car* createSpecificCar(void) {
+        return (new BmwCar());
+    }
+    virtual HighCar* createdSpecificHighCar(void) {
+        return (new HighBmwCar());
+    }
+};
+
+int main(int argc, char** argv) {
+    Factory* factory = new BenzFactory();
+    Car* specificCar = factory->createSpecificCar();
+    HighCar* spcificHighCar = factory->createdSpecificHighCar();
+
+    return 0;
+}
+
+hupeidong@ZBMac-C02F31WYM Desktop % ./main
+Benz::Benz()
+HighBenzCarBenz::Benz()
+```
+
+总结：抽象工厂中本身就包含生产普通车和高端车两种方法。
+
+# C++通过类型的字符串名称获取该类型的对象--注册机制
+
+## 1 从字符串获取类对象的思路
+
+为了从字符串获取一个类的对象，一个可行的思路是建立字符串与类的一个映射关系，为了方便操作，我们可以把这种映射关系放在一个map结构中：`std::map<std::string, ?>`。一种理想化的映射是我们直接从字符串获取类型名称`std::map<std::string, CLASS> string_class`，并在后续通过类型名称来构造对象`string_class[str] object`。但是在C++对反射尚没有很好的支持的时候，这种方法貌似也很少有人去尝试。
+
+另外一个常见的思路就是将字符串与可以获得类对象的函数进行映射`std::map<std::string, std::function<void*()>> string_objcreator_map`，如此，我们便可以通过字符串获取可以构造所需要的类对象的函数，实现从字符串到类对象的获取。
+
+```c++
+static std::shared_ptr<void> classFromName(std::string str) {
+    if (class_map.find(str) == class_map.end()) return nullptr;
+    return class_map[str]();
+}
+```
+
+## 2 一个例子
+
+```c++
+#include <iostream>
+#include <map>
+#include <utility>
+#include <string>
+#include <functional>
+#include <memory>
+
+class Product {
+public:
+    using Ptr = std::shared_ptr<Product>;
+    virtual void makeProduct() = 0;
+};
+
+class ProductA : public Product {
+public:
+    virtual void makeProduct() {
+        std::cout << "Make Product A!" << std::endl;
+    }
+};
+
+static std::map<std::string, std::function<std::shared_ptr<void>()>> class_map;
+
+static std::shared_ptr<void> classFromName(std::string str) {
+    if (class_map.find(str) == class_map.end()) return nullptr;
+    return class_map[str]();
+}
+
+class Register {
+public:
+    Register(std::string str, std::function<std::shared_ptr<void>()> func) {
+        class_map.insert(std::make_pair(str, func));
+    }
+};
+
+#define REGISTER(classname)                            \
+    class Register##classname {                        \
+    public:                                            \
+        static std::shared_ptr<classname> instance() { \
+            return std::make_shared<classname>();      \
+        }                                              \
+    };                                                 \
+    auto temp##classname =                             \
+        Register(std::string(#classname), Register##classname::instance);
+
+REGISTER(ProductA)
+
+int main() {
+    std::shared_ptr<ProductA> temp1 =
+        std::static_pointer_cast<ProductA>(classFromName("ProductA"));
+    temp1->makeProduct();
+}
+```
+
+我们需要在main函数之前将字符串和函数之间的关系准备好，即在main函数之前进行注册。在这里，为了进行注册，利用了全局变量的构造函数在main函数之前调用这个特点。在C++反射机制的实现,还有更多的在main函数之前执行一些动作的方式。
+
+另外这里REGISTER宏中并不是直接定义构造对象的函数，而是定义了一个类，以从中获取对象instance，这样在注册多个类的时候，instance函数不至于冲突。
+
+注：不同的类的instance函数。
+
+## 3 工厂注册
+
+注册机制的真正的应用场景更多是结合了工厂模式。而上面例子里的宏也主要是为了工厂模式中众多的重复代码准备的。
+
+想象一下在有些场景下，有多种类型的对象可以创建，而我们需要做的就是根据需要选择合适的类型进行对象构造。比如，A和B程序员分别写了一个工厂用于A和B产品的生产，但是老板没有拿定主意用哪一个。于是，我们不能直接在代码里面写明用的哪种，而是留一个可选的结构来根据条件来实现。
+
+```c++
+// reflection_template.h
+
+#ifndef _REFLECTION_TEMPLATE_H_
+#define _REFLECTION_TEMPLATE_H_
+
+#include <iostream>
+#include <map>
+#include <utility>
+#include <string>
+#include <functional>
+#include <memory>
+
+class Product {
+public:
+    using Ptr = std::shared_ptr<Product>;
+    virtual void makeProduct() = 0;
+};
+
+class ProductA : public Product {
+public:
+    virtual void makeProduct() {
+        std::cout << "Make Product A!" << std::endl;
+    }
+};
+
+class ProductB : public Product {
+public:
+    virtual void makeProduct() {
+        std::cout << "Make Product B!" << std::endl;
+    }
+};
+
+class Factory {
+public:
+    using Ptr = std::shared_ptr<Factory>;
+    virtual Product::Ptr createProduct() = 0;
+};
+
+class ProductAFactory : public Factory {
+public:
+    virtual Product::Ptr createProduct(/* args */) {
+        return std::make_shared<ProductA>();
+    }
+};
+
+class ProductBFactory : public Factory {
+public:
+    virtual Product::Ptr createProduct() {
+        return std::make_shared<ProductB>();
+    }
+};
+
+static std::map<std::string, std::function<std::shared_ptr<void>()>> class_map;
+static std::shared_ptr<void> classFromName(std::string str) {
+    if (class_map.find(str) == class_map.end()) return nullptr;
+    return class_map[str]();
+}
+
+class Register {
+public:
+    Register(std::string str, std::function<std::shared_ptr<void>()> func) {
+        class_map.insert(std::make_pair(str, func));
+    }
+};
+
+#define REGISTER(classname)                            \
+    class Register##classname {                        \
+    public:                                            \
+        static std::shared_ptr<classname> instance() { \
+            return std::make_shared<classname>();      \
+        }                                              \
+    };                                                 \
+    auto temp##classname =                             \
+        Register(std::string(#classname), Register##classname::instance);
+
+REGISTER(ProductAFactory)
+REGISTER(ProductBFactory)
+
+#endif
+
+#include "reflection_template.h"
+
+int main() {
+    std::shared_ptr<ProductAFactory> tempA =
+        std::static_pointer_cast<ProductAFactory>(
+            classFromName("ProductAFactory"));
+    tempA->createProduct()->makeProduct();
+    std::shared_ptr<ProductBFactory> tempB =
+        std::static_pointer_cast<ProductBFactory>(
+            classFromName("ProductBFactory"));
+    tempB->createProduct()->makeProduct();
+}
+```
+
+在这里实现了两个工厂，这里的工厂类可能被不同的程序员实现在不同的文件中。但是只要在实现完成之后利用REGISTER宏在全局的class_map中进行注册，即可通过classFromName得到构造对象的函数，进行对象构造。

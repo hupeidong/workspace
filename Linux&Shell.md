@@ -555,11 +555,94 @@ $
 
 ### 1 监测程序
 
+**探查进程**
 
+默认情况下，ps命令并不会提供那么多的信息:
 
-****
+```
+[admin@host-11-20-246-130 centos]$ ps
+   PID TTY          TIME CMD
+457076 pts/1    00:00:00 bash
+508142 pts/1    00:00:00 ps
+```
 
-****
+默认情况下，ps命令只会显示运行在当前控制台下的属于当前用户的进程。在此例中，我们只运行了bash shell(注意，shell也只是运行在系统上的另一个程序而已)以及ps命令本身。
+
+举个例子，如果你想查看系统上运行的所有进程，可用-ef参数组合
+
+```
+-e 显示所有进程
+-f 显示完整格式的输出
+```
+
+```
+[admin@host-11-20-246-130 centos]$ ps -ef
+UID         PID   PPID  C STIME TTY          TIME CMD
+root          1      0  0  2019 pts/4    00:00:37 /bin/sh -c tar2export && /usr/sbin/sshd && /usr/sbin/crond && sleep 9999999d
+root         55      1  0  2019 ?        00:00:03 /usr/sbin/sshd
+root         57      1  0  2019 ?        00:16:55 /usr/sbin/crond
+root         58      1  0  2019 pts/4    00:00:00 sleep 9999999d
+```
+
+如果想要获得更多的信息，可采用-l参数，它会产生一个长格式输出。
+
+```
+$ ps -l
+F S UID PID PPID C PRI NI ADDR SZ WCHAN TTY TIME CMD 
+0 S 500 3081 3080 0 80 0 - 1173 wait pts/0 00:00:00 bash 
+0 R 500 4463 3081 1 80 0- 1116- pts/0 00:00:00ps
+$
+```
+
+**实时监测进程**
+
+top
+
+```
+top - 20:15:11 up 982 days,  9:08,  0 users,  load average: 10.06, 8.48, 7.59
+Tasks:  64 total,   1 running,  63 sleeping,   0 stopped,   0 zombie
+%Cpu(s):  8.3 us,  1.9 sy,  0.0 ni, 89.7 id,  0.0 wa,  0.0 hi,  0.2 si,  0.0 st
+KiB Mem : 39570720+total, 17873705+free, 54948260 used, 16202190+buff/cache
+KiB Swap:        0 total,        0 free,        0 used. 30423516+avail Mem
+
+   PID USER      PR  NI    VIRT    RES    SHR S  %CPU %MEM     TIME+ COMMAND
+311784 admin     20   0 1143888 164400  18356 S   1.3  0.0   7:02.18 node
+297171 admin     20   0 6685196  20952    156 S   0.3  0.0  27:43.45 cpptools
+519046 admin     20   0  144036   1944   1364 R   0.3  0.0   0:00.02 top
+     1 root      20   0   11624    228     32 S   0.0  0.0   0:37.05 sh
+    55 root      20   0   82540   1048    196 S   0.0  0.0   0:03.56 sshd
+    57 root      20   0   22776   1020    352 S   0.0  0.0  16:55.84 crond
+    58 root      20   0    4308     88      0 S   0.0  0.0   0:00.00 sleep
+ 25370 admin     20   0  440524   6796    988 S   0.0  0.0 156:41.99 deploy
+ 44425 admin     20   0  281720   9512   1308 S   0.0  0.0 778:25.24 python
+```
+
+**结束进程**
+
+kill命令可通过进程ID(PID)给进程发信号。默认情况下，kill命令会向命令行中列出的全部PID发送一个TERM信号。遗憾的是，你只能用进程的PID而不能用命令名，所以kill命令有时并不好用。
+
+```
+$ kill 3940
+-bash: kill: (3940) - Operation not permitted $
+```
+
+TERM信号告诉进程可能的话就停止运行。不过，如果有不服管教的进程，那它通常会忽略这个请求。
+
+killall命令
+
+killall命令非常强大，它支持通过进程名而不是PID来结束进程。killall命令也支持通配符，这在系统因负载过大而变得很慢时很有用。
+```
+# killall http*
+#
+```
+
+上例中的命令结束了所有以http开头的进程，比如Apache Web服务器的httpd服务。
+
+### 2 监测磁盘空间
+
+**使用df命令**
+
+**使用du命令**
 
 ****
 
